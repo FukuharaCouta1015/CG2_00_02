@@ -1,5 +1,8 @@
 #include <Windows.h>
 #include <cstdint>
+#include <string>
+#include <format>
+
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
