@@ -1,9 +1,16 @@
 #include <Windows.h>
+#include <cassert>
 #include <cstdint>
-#include <string>
+#include <d3d12.h>
+#include <dxgi1_6.h>
 #include <format>
+#include <string>
 
-std::wstring ConvertString(const std::string& str) {
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
+
+std::wstring ConvertString(const std::string& str)
+{
     if (str.empty()) {
         return std::wstring();
     }
@@ -18,7 +25,8 @@ std::wstring ConvertString(const std::string& str) {
     return result;
 }
 
-std::string ConvertString(const std::wstring& str) {
+std::string ConvertString(const std::wstring& str)
+{
     if (str.empty()) {
         return std::string();
     }
@@ -35,13 +43,10 @@ std::string ConvertString(const std::wstring& str) {
     return result;
 }
 
-
 void Log(const std::string& message)
 {
     OutputDebugStringA(message.c_str());
 }
-
-
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -109,7 +114,49 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     ShowWindow(hwnd, SW_SHOW);
 
-            Log(ConvertString(std::format(L"-------------------------------WSTRING{}\n", L"abc")));
+    IDXGIFactory7* dxgiFactory = nullptr;
+
+    HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
+
+    assert(SUCCEEDED(hr));
+
+    IDXGIAdapter4* uesAdapter = nullptr;
+
+    for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&uesAdapter)) !=
+        DXGI_ERROR_NOT_FOUND; ++i) {
+        DXGI_ADAPTER_DESC3 adapterDesc {};
+        hr = uesAdapter->GetDesc3(&adapterDesc);
+        assert(SUCCEEDED(hr));
+        if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
+            Log(ConvertString(std::format(L"Use Adapter:{}\n", adapterDesc.Description)));
+            break;
+        }
+        uesAdapter = nullptr;
+    }
+    assert(uesAdapter != nullptr);
+
+     ID3D12Device* device = nullptr;
+
+     D3D_FEATURE_LEVEL featureLevels[] = {
+         D3D_FEATURE_LEVEL_12_2,
+         D3D_FEATURE_LEVEL_12_1,
+         D3D_FEATURE_LEVEL_12_0,
+     };
+
+     const char* featureLevelsStrings[] = { "12.2", "12.1", "12.0" };
+
+     for (size_t i = 0; i < _countof(featureLevels); ++i) {
+         hr = D3D12CreateDevice( uesAdapter,featureLevels[i],IID_PPV_ARGS(&device));
+         if (SUCCEEDED(hr)) {
+             Log(std::format("FeatureLevel:{}\n", featureLevelsStrings[i]));
+             break;
+         }
+     }
+     assert(device != nullptr);
+     Log("Complete create  D3D12Device!!!\n");
+
+
+    Log(ConvertString(std::format(L"-------------------------------WSTRING{}\n", L"abc")));
 
     MSG msg {};
     // ウィンドウのxボタンが押されるまでループ
@@ -124,10 +171,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             // ゲームの更新処理を行う
             // ここにゲームの更新処理を書く
         }
-
     }
 
-        Log(ConvertString(std::format(L"-------------------------------WSTRING{}\n", L"abc")));
+    Log(ConvertString(std::format(L"-------------------------------WSTRING{}\n", L"abc")));
 
     return 0;
 }
