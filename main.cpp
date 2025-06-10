@@ -526,7 +526,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // 頂点データを設定する
     vertexData[0] = { -0.5f, -0.5f, 0.0f, 1.0f }; 
 
-    vertexData[1] = { 0.5f, 0.5f, 0.0f, 1.0f };
+    vertexData[1] = { 0.0f, 0.5f, 0.0f, 1.0f };
 
     vertexData[2] = { 0.5f, -0.5f, 0.0f, 1.0f };
 
